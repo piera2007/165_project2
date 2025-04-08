@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Produkt-Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <canvas id="ratingChart" width="400" height="200"></canvas>
+  <script>
+    fetch('/products/average-rating')
+      .then(response => response.json())
+      .then(data => {
+        const labels = data.map(item => item._id);
+        const ratings = data.map(item => item.avgRating);
+        const ctx = document.getElementById('ratingChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Durchschnittliche Bewertung',
+              data: ratings
+            }]
+          }
+        });
+      });
+  </script>
+</body>
+</html>
