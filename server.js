@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -6,7 +5,6 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(bodyParser.json());
 
-// Verbindung zu MongoDB Atlas (ersetze ggf. den Datenbanknamen "ecommerce")
 const dbURI = 'mongodb+srv://dbAdmin:SaAtAm4hdMAv3bDY@cluster0.msdl4hm.mongodb.net/ecommerce?retryWrites=true&w=majority';
 mongoose.connect(dbURI, {
   useNewUrlParser: true,
@@ -14,8 +12,6 @@ mongoose.connect(dbURI, {
 })
 .then(() => console.log('MongoDB verbunden!'))
 .catch(err => console.error('Verbindungsfehler:', err));
-
-// --- Datenmodell Definition ---
 
 // Schema für Reviews (eingebettet im Produkt)
 const reviewSchema = new mongoose.Schema({
@@ -37,7 +33,6 @@ const productSchema = new mongoose.Schema({
 // Modell erstellen
 const Product = mongoose.model('Product', productSchema);
 
-// --- Bonus: Textindex für Full-Text-Search ---
 Product.collection.createIndex({ name: "text", description: "text" });
 
 // --- REST-API Endpunkte ---
@@ -90,7 +85,7 @@ app.get('/products/average-rating', async (req, res) => {
         { $unwind: "$reviews" },
         {
           $group: {
-            _id: "$name",  // Gruppierung auf den Produktnamen
+            _id: "$name",
             avgRating: { $avg: "$reviews.rating" }
           }
         }
@@ -114,7 +109,6 @@ app.get('/products/search', async (req, res) => {
 
 app.get('/products/mapreduce', async (req, res) => {
   try {
-    // Map als String
     const mapFunction = function() {
       if (this.reviews && this.reviews.length > 0) {
         this.reviews.forEach(review => {
@@ -123,12 +117,12 @@ app.get('/products/mapreduce', async (req, res) => {
       }
     }.toString();
 
-    // Reduce als String
     const reduceFunction = function(key, values) {
       return Array.sum(values) / values.length;
     }.toString();
 
-    // Der eigentliche Befehl
+    // Der eigentliche Befehl 
+    // Funktioniert nicht: "CMD_NOT_ALLOWED: mapReduce"
     const result = await mongoose.connection.db.command({
       mapReduce: 'products',
       map: mapFunction,
@@ -136,7 +130,6 @@ app.get('/products/mapreduce', async (req, res) => {
       out: { inline: 1 }
     });
 
-    // result.results enthält Array von { _id, value }
     res.json(result.results);
 
   } catch (err) {
